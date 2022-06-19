@@ -1,0 +1,36 @@
+#!/bin/bash
+#
+# For each defined storage run pure command.
+# 
+
+if [[ $# -eq 0 ]] ; then
+    echo "Expecting following"
+    echo -e "\n\t arg 1 - pure command *use \"'\" for pure command with parameters"
+    echo -e "\t arg 2 - grep pattern\n"
+    exit 0
+fi
+
+FILE="./pure_storages.ini"
+if [ ! -f "$FILE" ]; then
+    echo -e "Local pure_storages.ini does not exist.\nExiting !!!"
+    exit 1
+fi
+
+source config_parser.sh 
+config_parser "$FILE"
+config.section.user_info
+
+PureCMD=$1
+SCNDCMD=$2
+
+for strg in ${storages[@]};do 
+    echo $strg 
+    echo "================================================"
+    echo $PureCMD
+    if [ -z "$SCNDCMD" ];then
+        sshpass -p $password ssh -o StrictHostKeyChecking=no -l $username $strg $PureCMD 
+    else
+       sshpass -p $password ssh -o StrictHostKeyChecking=no -l $username  $strg $PureCMD | grep -E -i $SCNDCMD
+    fi
+    echo -e "\n"
+done
