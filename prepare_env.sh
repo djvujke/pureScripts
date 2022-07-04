@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # Install what we need
-yum install -y git sshpass
+yum install -y git sshpass bind-utils
 
 # Create disks on flasharray1
 username=pureuser
 password=pureuser
 STRG1=10.0.0.11
-STRG2=10.0.0.12
+STRG2=10.0.0.21
 
 SSH="/bin/sshpass -p $password ssh -oStrictHostKeyChecking=no -l $username "
 
