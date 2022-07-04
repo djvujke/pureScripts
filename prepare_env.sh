@@ -11,6 +11,10 @@ STRG2=10.0.0.21
 
 SSH="/bin/sshpass -p $password ssh -oStrictHostKeyChecking=no -l $username "
 
+# CLI command to connect 2 flasharrays for replication purpose
+ConnKey=$($SSH $STRG2 purearray list --connection-key|cut -d " " -f 3)
+echo $ConnKey | $SSH $STRG1 purearray connect --management-address $STRG2 --type async-replication --connection-key
+
 # Create test Volumes
 $SSH $STRG1 purevol create --size 1G B1Data
 $SSH $STRG1 purevol create --size 2G B1Log
@@ -62,19 +66,8 @@ $SSH $STRG2 purepod demote B2POD-DR
 $SSH $STRG2 purepod create B3POD-DR
 $SSH $STRG2 purepod demote B3POD-DR
 
-# CLI command to connect 2 flasharrays for replication purpose
-
-ConnKey=$($SSH $STRG2 purearray list --connection-key)
-
-/usr/bin/expect << EOD
-spawn purearray connect --management-address $STRG1 --type async-replication --connection-key
-expect "Enter the connection key of the target array:"
-send "$ConnKey\n"
-EOD
-
 # Create replica link  
 $SSH $STRG1 purepod replica-link create B1POD --remote-pod B1POD-DR --remote $STRG2
 $SSH $STRG1 purepod replica-link create B2POD --remote-pod B2POD-DR --remote $STRG2
 $SSH $STRG1 purepod replica-link create B3POD --remote-pod B3POD-DR --remote $STRG2
-
 $SSH $STRG1 purepod replica-link list
