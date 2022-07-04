@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Install what we need
-yum install -y git sshpass bind-utils
+yum install -y git sshpass bind-utils expect
 
 # Create disks on flasharray1
 username=pureuser
@@ -30,27 +30,27 @@ $SSH $STRG1 purepgroup create B1POD::B1PG
 $SSH $STRG1 purevol move B1Data B1POD
 $SSH $STRG1 purevol move B1Log B1POD
 $SSH $STRG1 purevol move B1Path B1POD
-$SSH $STRG1 purevol add --pgroup B1POD::B1PG B1Data
-$SSH $STRG1 purevol add --pgroup B1POD::B1PG B1Log
-$SSH $STRG1 purevol add --pgroup B1POD::B1PG B1Path
+$SSH $STRG1 purevol add --pgroup B1POD::B1PG B1POD::B1Data
+$SSH $STRG1 purevol add --pgroup B1POD::B1PG B1POD::B1Log
+$SSH $STRG1 purevol add --pgroup B1POD::B1PG B1POD::B1Path
 
 $SSH $STRG1 purepod create B2POD
 $SSH $STRG1 purepgroup create B2POD::B2PG
 $SSH $STRG1 purevol move B2Data B2POD
 $SSH $STRG1 purevol move B2Log B2POD
 $SSH $STRG1 purevol move B2Path B2POD
-$SSH $STRG1 purevol add --pgroup B2POD::B2PG B2Data
-$SSH $STRG1 purevol add --pgroup B2POD::B2PG B2Log
-$SSH $STRG1 purevol add --pgroup B2POD::B2PG B2Path
+$SSH $STRG1 purevol add --pgroup B2POD::B2PG B2POD::B2Data
+$SSH $STRG1 purevol add --pgroup B2POD::B2PG B2POD::B2Log
+$SSH $STRG1 purevol add --pgroup B2POD::B2PG B2POD::B2Path
 
 $SSH $STRG1 purepod create B3POD
 $SSH $STRG1 purepgroup create B3POD::B3PG
 $SSH $STRG1 purevol move B3Data B3POD
 $SSH $STRG1 purevol move B3Log B3POD
 $SSH $STRG1 purevol move B3Path B3POD
-$SSH $STRG1 purevol add --pgroup B3POD::B3PG B3Data
-$SSH $STRG1 purevol add --pgroup B3POD::B3PG B3Log
-$SSH $STRG1 purevol add --pgroup B3POD::B3PG B3Path
+$SSH $STRG1 purevol add --pgroup B3POD::B3PG B3POD::B3Data
+$SSH $STRG1 purevol add --pgroup B3POD::B3PG B3POD::B3Log
+$SSH $STRG1 purevol add --pgroup B3POD::B3PG B3POD::B3Path
 
 # On STRG2  
 $SSH $STRG2 purepod create B1POD-DR
@@ -61,6 +61,16 @@ $SSH $STRG2 purepod demote B2POD-DR
 
 $SSH $STRG2 purepod create B3POD-DR
 $SSH $STRG2 purepod demote B3POD-DR
+
+# CLI command to connect 2 flasharrays for replication purpose
+
+ConnKey=$($SSH $STRG2 purearray list --connection-key)
+
+/usr/bin/expect << EOD
+spawn purearray connect --management-address $STRG1 --type async-replication --connection-key
+expect "Enter the connection key of the target array:"
+send "$ConnKey\n"
+EOD
 
 # Create replica link  
 $SSH $STRG1 purepod replica-link create B1POD --remote-pod B1POD-DR --remote $STRG2
