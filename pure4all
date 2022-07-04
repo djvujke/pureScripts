@@ -20,6 +20,8 @@ source config_parser.sh
 config_parser "$FILE"
 config.section.user_info
 
+SSH="/bin/sshpass -p $password ssh -oStrictHostKeyChecking=no -l $username "
+
 PureCMD=$1
 SCNDCMD=$2
 
@@ -28,9 +30,9 @@ for strg in ${storages[@]};do
     echo "================================================"
     echo $PureCMD
     if [ -z "$SCNDCMD" ];then
-        sshpass -p $password ssh -o StrictHostKeyChecking=no -l $username $strg $PureCMD 
+        $SSH $strg $PureCMD 
     else
-       sshpass -p $password ssh -o StrictHostKeyChecking=no -l $username  $strg $PureCMD | grep -E -i $SCNDCMD
+       $SSH $strg $PureCMD | grep -E -i $SCNDCMD
     fi
     echo -e "\n"
 done
